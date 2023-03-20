@@ -1,0 +1,32 @@
+Provided result files are named as follows:
+"result_<QR decoder>_<Data matrix decoder>_<Region size>.json"
+
+Some statistics:
+
+================================================================
+ About 100 good-quality photo QR+DM cropped with original size
+----------------------------------------------------------------
+Decoder Type Decoded Total Percent Comment
+ zxing   QR     25     60   41.7%
+ zxing   DM     19     44   43.2%
+ zbar    QR     37     60   61.7%
+ libdmtx DM     23     44   52.3%  Works too long
+ opencv  QR     43     60   71.7%
+
+================================================================
+ About 100 good-quality photo QR+DM cropped with scaling to 150
+----------------------------------------------------------------
+Decoder Type Decoded Total Percent Comment
+ zxing   QR     38     60   63.3%
+ zxing   DM     32     44   72.7%
+ zbar    QR     41     60   68.3%
+ libdmtx DM     32     44   72.7%
+ opencv  QR     46     60   76.7%  Needs bound padding
+
+================================================================
+ Big dataset of QR-codes of diff quality and size (2793 images)
+----------------------------------------------------------------
+Decoder Type Decoded Total Percent Comment
+ zxing   QR     58    584    9.9%  
+ zbar    QR    134    584   22.9%  Very fast
+ opencv  QR      0      0    0.0%  Failed on first images
