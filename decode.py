@@ -33,7 +33,7 @@ def detectAndDecodeOpenCV(img):
         print('OpenCV: QR-code not finded')
         return (False, '')
 
-    int_corners = tuple(tuple(map(int, x)) for x in corners[0])
+    # int_corners = tuple(tuple(map(int, x)) for x in corners[0])
 
     # displayResult(img.copy(), decoded_info, int_corners)
     return (True, decoded_info)
@@ -47,7 +47,7 @@ def detectAndDecodeZBar(img):
         return (False, '')
 
     obj = decoded_objects[0]
-    int_corners = [[p.x, p.y] for p in obj.polygon]
+    # int_corners = [[p.x, p.y] for p in obj.polygon]
 
     # displayResult(img.copy(), obj.data.decode('utf-8'), int_corners)
     return (True, obj.data.decode('utf-8'))
@@ -61,8 +61,8 @@ def detectAndDecodeLibDMtx(img):
         return (False, '')
 
     obj = decoded_objects[0]
-    r = obj.rect
-    int_corners = [[r.left, r.top], [r.left + r.width, r.top], [r.left + r.width, r.top + r.height], [r.left, r.top + r.height]]
+    # r = obj.rect
+    # int_corners = [[r.left, r.top], [r.left + r.width, r.top], [r.left + r.width, r.top + r.height], [r.left, r.top + r.height]]
 
     # displayResult(img.copy(), obj.data.decode('utf-8'), int_corners)
     return (True, obj.data.decode('utf-8'))
@@ -78,7 +78,7 @@ def detectAndDecodeZXing(img):
         print('PyZXing: Barcode not finded')
         return (False, '')
 
-    int_corners = tuple((int(x[0]), int(x[1])) for x in obj['points'])
+    # int_corners = tuple((int(x[0]), int(x[1])) for x in obj['points'])
 
     # displayResult(img.copy(), obj['parsed'].decode('utf-8'), int_corners)
     return (True, obj['parsed'].decode('utf-8'))
@@ -121,6 +121,7 @@ QR_total = 0
 DataMatrix_decoded = 0
 DataMatrix_total = 0
 iter = 0
+total = len(data['objects'])
 
 for object in data['objects']:
     img_path = os.path.join(os.path.dirname(markup_file), object['image'])
@@ -170,9 +171,11 @@ for object in data['objects']:
     # Backup
     if iter % 5 == 0:
         result_file_path = os.path.join(os.path.dirname(markup_file), 'result.json')
+        decoded_data = {'types_list': [{'id': 0, 'name': 'QR-code'}, {'id': 1, 'name': 'Data matrix'}]}
+        decoded_data['objects'] = data['objects'][:iter]
 
         with open(result_file_path, 'w') as file:
-            json.dump(data, file, indent=2)
+            json.dump(decoded_data, file, indent=2)
 
         DataMatrix_percent = 0
 
@@ -184,9 +187,11 @@ for object in data['objects']:
         if QR_total > 0:
             QR_percent = round(QR_decoded / QR_total * 100, 1)
 
-        print(f'\nType Decoded Total Percent\n' + 
-            f' QR {QR_decoded:-6}{QR_total:-7}{QR_percent:-7}%\n' +
-            f' DM {DataMatrix_decoded:-6}{DataMatrix_total:-7}{DataMatrix_percent:-7}%\n')
+        print(f'==================================\n {iter} of {total} images\n----------------------------------' +
+            f'\nDecoder Type Decoded Total Percent\n' + 
+            f'{QR_decoder_type:8} QR {QR_decoded:-6}{QR_total:-7}{QR_percent:-7}%\n' +
+            f'{DataMatrix_decoder_type:8} DM {DataMatrix_decoded:-6}{DataMatrix_total:-7}{DataMatrix_percent:-7}%\n' + 
+            '==================================')
 
 
 result_file_path = os.path.join(os.path.dirname(markup_file), 'result.json')
@@ -204,6 +209,8 @@ QR_percent = 0
 if QR_total > 0:
     QR_percent = round(QR_decoded / QR_total * 100, 1)
 
-print(f'\nType Decoded Total Percent\n' + 
-    f' QR {QR_decoded:-6}{QR_total:-7}{QR_percent:-7}%\n' +
-    f' DM {DataMatrix_decoded:-6}{DataMatrix_total:-7}{DataMatrix_percent:-7}%\n')
+print(f'==================================\n Total {total} images\n----------------------------------' +
+    f'\nDecoder Type Decoded Total Percent\n' + 
+    f'{QR_decoder_type:8} QR {QR_decoded:-6}{QR_total:-7}{QR_percent:-7}%\n' +
+    f'{DataMatrix_decoder_type:8} DM {DataMatrix_decoded:-6}{DataMatrix_total:-7}{DataMatrix_percent:-7}%\n' + 
+    '==================================')

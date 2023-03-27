@@ -5,7 +5,7 @@ import cv2 as cv
 
 
 if len(sys.argv) < 2:
-    print('Not enougth args: <folder>')
+    print('Usage: <dataset_folder>')
     sys.exit()
 
 folder = sys.argv[1]
@@ -30,7 +30,7 @@ for img_file, markup_file in zip(img_files, markup_files):
                 continue
             yolo_markup = line.split()
             # code_type = -(int(yolo_markup[0]) - 1)
-            code_type = int(yolo_markup[0])
+            code_type = -(int(yolo_markup[0]) - 1)
             bbox = [float(x) for x in yolo_markup[1:]]
             # img_w = img.shape[1]
             # img_h = img.shape[0]
