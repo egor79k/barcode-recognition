@@ -7,7 +7,10 @@ LAST RESULTS:
  Decoding after normalization. Total 81 images
 ----------------------------------------------------------------
 Decoder Type Decoded Total Percent
+zxing    QR      0     55    0.0%
+zbar     QR      0     55    0.0%
 opencv   QR      2     55    3.6%
+zxing    DM      1     31    3.2%
 libdmtx  DM      1     31    3.2%
 ================================================================
 
