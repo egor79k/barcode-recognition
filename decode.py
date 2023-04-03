@@ -6,6 +6,7 @@ import cv2 as cv
 import pyzbar.pyzbar as pyzbar
 from pylibdmtx import pylibdmtx
 import pyzxing
+import normalizer
 
 
 # def displayResult(img, code, polygon):
@@ -124,6 +125,7 @@ iter = 0
 total = len(data['objects'])
 
 for object in data['objects']:
+    print(object['image'])
     img_path = os.path.join(os.path.dirname(markup_file), object['image'])
     img = cv.imread(img_path)
 
@@ -138,8 +140,15 @@ for object in data['objects']:
         h = int(bbox[3] * img_height)
 
         cropped_img = img[y : y + h, x : x + w]
-        # scale = 150 / min(cropped_img.shape[0], cropped_img.shape[1])
-        # cropped_img = cv.resize(cropped_img, None, fx=scale, fy=scale)
+        scale = 150 / min(cropped_img.shape[0], cropped_img.shape[1])
+        cropped_img = cv.resize(cropped_img, None, fx=scale, fy=scale)
+        # cv.imshow("Before normalization", cropped_img)
+        # cv.waitKey(0)
+        cv.imwrite('temp.png', cropped_img)
+        normalizer.Normalize('temp.png', 'temp.png')
+        cropped_img = cv.imread('temp.png')
+        # cv.imshow("After normalization", cropped_img)
+        # cv.waitKey(0)
 
         if cropped_img.shape[0] < 1 and cropped_img.shape[1] < 1:
             continue

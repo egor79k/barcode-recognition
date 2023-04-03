@@ -1,6 +1,26 @@
 Provided result files are named as follows:
 "result_<QR decoder>_<Data matrix decoder>_<Region size>.json"
 
+LAST RESULTS:
+
+================================================================
+ Decoding after normalization. Total 81 images
+----------------------------------------------------------------
+Decoder Type Decoded Total Percent
+opencv   QR      2     55    3.6%
+libdmtx  DM      1     31    3.2%
+================================================================
+
+================================================================
+ Decoding after localization for 1D BarCodes
+----------------------------------------------------------------
+Decoder Type Decoded Total Percent
+opencv   BC     62     92   67.4%
+================================================================
+
+
+OLD RESULTS:
+
 ================================================================
  Train part of DM extratrain dataset. Total 1422 images
 ----------------------------------------------------------------
