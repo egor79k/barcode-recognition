@@ -144,13 +144,15 @@ objects = os.listdir(dir_path)
 total = len(objects)
 
 # predict.init_model()
-model_checkpoint_path = 'epoch=19-step=4540.ckpt'
+model_checkpoint_path = 'epoch=50-step=4357.ckpt'
 model = predict.FasterRCNN.load_from_checkpoint(model_checkpoint_path).model
 model.eval()
 
 
 # for object in data['objects']:
 for img_name in objects:
+    if not img_name.endswith('.jpg'):
+        continue
     img_path = os.path.join(dir_path, img_name)
     img = cv.imread(img_path)
 
@@ -178,28 +180,17 @@ for img_name in objects:
             continue
 
         bbox = res['boxes'][0]
-        type = res['labels'][0] + 1
+        type = res['labels'][0] - 1
         x = int(bbox[0])
         y = int(bbox[1])
         w = int(bbox[2])
         h = int(bbox[3])
 
         cropped_img = img_resized[y : h, x : w]
-
-        # cv.normalize(img_resized, img_resized, 0, 1, cv.NORM_MINMAX)
-        # img_with_boxes = img_resized.copy()
-        # cv.rectangle(img_with_boxes, (x, y, w - x, h - y), (255, 0, 0), thickness=3)
-        # cv.imshow("IMG", img_with_boxes)
-        # cv.waitKey(0)
-        # cv.imshow("IMG", cropped_img)
-        # cv.waitKey(0)
-
-        # cropped_img = img[y : y + h, x : x + w]
-        # scale = 150 / min(cropped_img.shape[0], cropped_img.shape[1])
-        # cropped_img = cv.resize(cropped_img, None, fx=scale, fy=scale)
-
         if cropped_img.shape[0] < 1 and cropped_img.shape[1] < 1:
             continue
+        scale = 190 / min(cropped_img.shape[0], cropped_img.shape[1])
+        cropped_img = cv.resize(cropped_img, None, fx=scale, fy=scale)
 
         if type == 0:
             success, info = QR_decoder(cropped_img)
@@ -217,13 +208,13 @@ for img_name in objects:
             if success:
                 DM_decoded += 1
 
-        elif type == 2:
-            success, info = detectAndDecodeOpenCVBarcode(cropped_img)
+        # elif type == 2:
+        #     success, info = detectAndDecodeOpenCVBarcode(cropped_img)
 
-            BC_total += 1
+        #     BC_total += 1
 
-            if success:
-                BC_decoded += 1
+        #     if success:
+        #         BC_decoded += 1
 
         else:
             print('Unknown type: ', type)

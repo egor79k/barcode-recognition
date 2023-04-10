@@ -6,7 +6,7 @@ LAST RESULTS:
 Here 'Finded' is num of codes detected by localizer
 and 'True' is real num of codes from markup
 ================================================================
- Decoding with localizer on MainDataset
+ Decoding with localizer by Andrey on MainDataset
 ----------------------------------------------------------------
 Decoder Type Decoded Finded True Percent Imgs DatasetPart
 opencv   QR      5     14    23   35.7%   12  qr_many
@@ -15,6 +15,18 @@ opencv   QR      0      0     1      0%    1  datamatrix_qr
 libdmtx  DM      0      1     1    0.0%    1  datamatrix_qr
 libdmtx  DM     27     94    99   28.7%   26  datamatrix_many
 libdmtx  DM     22     40    54   55.0%   54  datamatrix_1
+================================================================
+
+================================================================
+ Decoding with localizer by Nadya on MainDataset
+----------------------------------------------------------------
+Decoder Type Decoded Finded True Percent Imgs DatasetPart
+opencv   QR      2      9    23   22.2%   12  qr_many
+opencv   QR      3     10    10   30.0%   10  qr_1
+opencv   QR      0      0     1      0%    1  datamatrix_qr
+libdmtx  DM      0      1     1    0.0%    1  datamatrix_qr
+libdmtx  DM      2     19    99   10.5%   26  datamatrix_many
+libdmtx  DM     17     49    54   34.7%   54  datamatrix_1
 ================================================================
 
 
