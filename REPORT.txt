@@ -2,7 +2,25 @@ Provided result files are named as follows:
 "result_<QR decoder>_<Data matrix decoder>_<Region size>.json"
 
 LAST RESULTS:
+11.04.2023
+Here 'Finded' is num of codes detected by localizer
+and 'True' is real num of codes from markup
+================================================================
+ Decoding with localizer on MainDataset
+----------------------------------------------------------------
+Decoder Type Decoded Finded True Percent Imgs DatasetPart
+opencv   QR      5     14    23   35.7%   12  qr_many
+opencv   QR      6     10    10   60.0%   10  qr_1
+opencv   QR      0      0     1      0%    1  datamatrix_qr
+libdmtx  DM      0      1     1    0.0%    1  datamatrix_qr
+libdmtx  DM     27     94    99   28.7%   26  datamatrix_many
+libdmtx  DM     22     40    54   55.0%   54  datamatrix_1
+================================================================
 
+
+OLD RESULTS:
+
+04.04.2023
 ================================================================
  Decoding after normalization. Total 81 images
 ----------------------------------------------------------------
@@ -21,8 +39,6 @@ Decoder Type Decoded Total Percent
 opencv   BC     62     92   67.4%
 ================================================================
 
-
-OLD RESULTS:
 
 ================================================================
  Train part of DM extratrain dataset. Total 1422 images
