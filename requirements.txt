@@ -1,0 +1,10 @@
+matplotlib==3.6.2
+numpy==1.21.5
+opencv_python==4.7.0.72
+pylibdmtx==0.1.10
+pytorch_lightning==2.0.1
+pyzbar==0.1.9
+pyzxing==1.0.2
+torch==2.0.0
+torchvision==0.15.1
+ultralytics==8.0.69

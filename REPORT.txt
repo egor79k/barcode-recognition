@@ -1,6 +1,15 @@
 Provided result files are named as follows:
 "result_<QR decoder>_<Data matrix decoder>_<Region size>.json"
 
+==================================
+ Total 103 images
+----------------------------------
+Decoder Type Decoded Total Percent
+opencv   QR     10     29   34.5%
+libdmtx  DM     62    147   42.2%
+==================================
+
+
 LAST RESULTS:
 11.04.2023
 Here 'Finded' is num of codes detected by localizer
