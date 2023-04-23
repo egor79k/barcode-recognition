@@ -6,12 +6,18 @@ import cv2 as cv
 import pyzbar.pyzbar as pyzbar
 from pylibdmtx import pylibdmtx
 import pyzxing
-from localizer import Localizer
+from localizer_1 import Localizer_1
+from localizer_2 import Localizer_2
 
 # QR
 def detectAndDecodeOpenCV(img):
     bardet = cv.QRCodeDetector()
-    decoded_info, corners, _ = bardet.detectAndDecode(img)
+
+    try:
+        decoded_info, corners, _ = bardet.detectAndDecode(img)
+    except:
+        print('OpenCV: Exception in QR decoder')
+        return (False, '')
 
     if corners is None:
         print('OpenCV: QR-code not finded')
@@ -57,8 +63,8 @@ def detectAndDecodeZXing(img):
     return (True, obj['parsed'].decode('utf-8'))
 
 
-if len(sys.argv) < 4:
-    print('Usage: <markup file> <QR decoder> <DataMatrix decoder>')
+if len(sys.argv) < 6:
+    print('Usage: <markup file> <QR decoder> <DataMatrix decoder> <localizer> <localizer checkpoint>')
     sys.exit()
 
 QR_decoders = {
@@ -70,10 +76,17 @@ DataMatrix_decoders = {
     'libdmtx': detectAndDecodeLibDMtx,
     'zxing': detectAndDecodeZXing}
 
+Localizers = {
+    '1': Localizer_1,
+    '2': Localizer_2}
+
 markup_file = sys.argv[1]
 
 QR_decoder_type = sys.argv[2]
 DataMatrix_decoder_type = sys.argv[3]
+Localizer_type = sys.argv[4]
+
+localizer_checkpoint = sys.argv[5]
 
 if QR_decoder_type not in QR_decoders:
     print('Unknown QR_decoder_type: ', QR_decoder_type)
@@ -83,8 +96,13 @@ if DataMatrix_decoder_type not in DataMatrix_decoders:
     print('Unknown DataMatrix_decoder_type: ', DataMatrix_decoder_type)
     sys.exit()
 
+if Localizer_type not in Localizers:
+    print('Unknown Localizer_type: ', Localizer_type)
+    sys.exit()
+
 QR_decoder = QR_decoders[QR_decoder_type]
 DataMatrix_decoder = DataMatrix_decoders[DataMatrix_decoder_type]
+Localizer = Localizers[Localizer_type]
 
 with open(markup_file, 'r') as file:
     data = json.load(file)
@@ -94,34 +112,34 @@ QR_total = 0
 DataMatrix_decoded = 0
 DataMatrix_total = 0
 iter = 0
+padding = 20
+scale_size = 130 + padding * 2
 total = len(data['objects'])
 
-localizer = Localizer('best (4).pt')
+localizer = Localizer(localizer_checkpoint)
 
 for object in data['objects']:
     img_path = os.path.join(os.path.dirname(markup_file), object['image'])
     img = cv.imread(img_path)
     object['markup'] = []
-    bboxes = localizer.localize(img)
+    results = localizer.localize(img)
 
-    for bbox in bboxes:
-        x = bbox[0]
-        y = bbox[1]
-        w = bbox[2] - x
-        h = bbox[3] - y
-        
-        type = int(bbox[4])
+    for res in results:
+        x = res[0]
+        y = res[1]
+        w = res[2]
+        h = res[3]
+        type = res[4]
         
         markup = {}
         markup['bbox'] = [x, y, w, h]
         markup['type'] = type
 
-        cropped_img = img[y : y + h, x : x + w]
-        scale = 190 / min(cropped_img.shape[0], cropped_img.shape[1])
-        cropped_img = cv.resize(cropped_img, None, fx=scale, fy=scale)
-
-        if cropped_img.shape[0] < 1 and cropped_img.shape[1] < 1:
+        cropped_img = img[y - padding : y + h + padding, x - padding : x + w + padding]
+        if cropped_img.shape[0] < 1 or cropped_img.shape[1] < 1:
             continue
+        scale = scale_size / min(cropped_img.shape[0], cropped_img.shape[1])
+        cropped_img = cv.resize(cropped_img, None, fx=scale, fy=scale, interpolation=cv.INTER_CUBIC)
 
         if type == 0:
             success, info = QR_decoder(cropped_img)
