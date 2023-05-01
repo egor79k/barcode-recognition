@@ -6,8 +6,9 @@ import cv2 as cv
 import pyzbar.pyzbar as pyzbar
 from pylibdmtx import pylibdmtx
 import pyzxing
-from localizer_1 import Localizer_1
-from localizer_2 import Localizer_2
+from qr_dm_decoder.localizer_1 import Localizer_1
+from qr_dm_decoder.localizer_2 import Localizer_2
+import augmentation as aug
 
 # QR
 def detectAndDecodeOpenCV(img):
@@ -19,7 +20,7 @@ def detectAndDecodeOpenCV(img):
         print('OpenCV: Exception in QR decoder')
         return (False, '')
 
-    if corners is None:
+    if corners is None or len(decoded_info) == 0:
         print('OpenCV: QR-code not finded')
         return (False, '')
 
@@ -64,8 +65,14 @@ def detectAndDecodeZXing(img):
 
 
 if len(sys.argv) < 6:
-    print('Usage: <markup file> <QR decoder> <DataMatrix decoder> <localizer> <localizer checkpoint>')
+    print('Usage: <markup file> <QR decoder> <DataMatrix decoder> <localizer> <localizer checkpoint> [augmentation]')
     sys.exit()
+
+Augmentations = {
+    'rotate': aug.rotate,
+    'mix_channels': aug.mix_channels,
+    'crop': aug.crop,
+    'rotate_color': aug.rotate_color}
 
 QR_decoders = {
     'opencv': detectAndDecodeOpenCV,
@@ -85,8 +92,18 @@ markup_file = sys.argv[1]
 QR_decoder_type = sys.argv[2]
 DataMatrix_decoder_type = sys.argv[3]
 Localizer_type = sys.argv[4]
-
 localizer_checkpoint = sys.argv[5]
+
+augmentation = None
+
+if len(sys.argv) > 6:
+    augmentation_type = sys.argv[6]
+
+    if augmentation_type not in Augmentations:
+        print('Unknown augmentation_type: ', augmentation_type)
+        sys.exit()
+
+    augmentation = Augmentations[augmentation_type]
 
 if QR_decoder_type not in QR_decoders:
     print('Unknown QR_decoder_type: ', QR_decoder_type)
@@ -112,15 +129,20 @@ QR_total = 0
 DataMatrix_decoded = 0
 DataMatrix_total = 0
 iter = 0
-padding = 20
-scale_size = 130 + padding * 2
+padding = 0.15
+scale_size = int(130 * (1 + 2 * padding))
 total = len(data['objects'])
 
 localizer = Localizer(localizer_checkpoint)
+aug.set_seed(0)
 
 for object in data['objects']:
     img_path = os.path.join(os.path.dirname(markup_file), object['image'])
     img = cv.imread(img_path)
+
+    if augmentation is not None:
+        img = augmentation(img)
+
     object['markup'] = []
     results = localizer.localize(img)
 
@@ -135,11 +157,15 @@ for object in data['objects']:
         markup['bbox'] = [x, y, w, h]
         markup['type'] = type
 
-        cropped_img = img[y - padding : y + h + padding, x - padding : x + w + padding]
+        orig_pad = int(padding * min(w, h))
+
+        cropped_img = img[y - orig_pad : y + h + orig_pad, x - orig_pad : x + w + orig_pad]
         if cropped_img.shape[0] < 1 or cropped_img.shape[1] < 1:
             continue
         scale = scale_size / min(cropped_img.shape[0], cropped_img.shape[1])
         cropped_img = cv.resize(cropped_img, None, fx=scale, fy=scale, interpolation=cv.INTER_CUBIC)
+        # cv.imshow('img', cropped_img)
+        # cv.waitKey(0)
 
         if type == 0:
             success, info = QR_decoder(cropped_img)

@@ -1,6 +1,47 @@
 Provided result files are named as follows:
 "result_<QR decoder>_<Data matrix decoder>_<Region size>.json"
 
+
+LAST RESULTS:
+
+01.05.2023
+===============================================
+ Total 197 images with Localizer 1
+-----------------------------------------------
+Decoder Type Decoded Total Percent Augmentation
+opencv   QR     44    172   25.6%   -
+libdmtx  DM     53    129   41.1%   -
+opencv   QR     36    142   25.4%   rotate
+libdmtx  DM     48    129   37.2%   rotate
+opencv   QR     42    169   24.9%   mix_channels
+libdmtx  DM     51    128   39.8%   mix_channels
+opencv   QR     21     89   23.6%   crop
+libdmtx  DM     16     45   35.6%   crop
+opencv   QR     46    156   29.5%   rotate_color
+libdmtx  DM     53    138   38.4%   rotate_color
+===============================================
+
+
+=================================================
+ Total 197 images with Localizer 2
+-------------------------------------------------
+Decoder Type Decoded Total Percent Augmentation
+opencv   QR     50    134   37.3%   -
+libdmtx  DM     67    139   48.2%   -
+opencv   QR     36    127   28.3%   rotate
+libdmtx  DM     42    111   37.8%   rotate
+opencv   QR     47    137   34.3%   mix_channels
+libdmtx  DM     67    142   47.2%   mix_channels
+opencv   QR     23     82   28.0%   crop
+libdmtx  DM     27     57   47.4%   crop
+opencv   QR     47    137   34.3%   rotate_color
+libdmtx  DM     64    138   46.4%   rotate_color
+=================================================
+
+
+
+OLD RESULTS:
+
 ==================================
  Total 103 images
 ----------------------------------
@@ -9,8 +50,6 @@ opencv   QR     10     29   34.5%
 libdmtx  DM     62    147   42.2%
 ==================================
 
-
-LAST RESULTS:
 11.04.2023
 Here 'Finded' is num of codes detected by localizer
 and 'True' is real num of codes from markup
@@ -37,9 +76,6 @@ libdmtx  DM      0      1     1    0.0%    1  datamatrix_qr
 libdmtx  DM      2     19    99   10.5%   26  datamatrix_many
 libdmtx  DM     17     49    54   34.7%   54  datamatrix_1
 ================================================================
-
-
-OLD RESULTS:
 
 04.04.2023
 ================================================================
