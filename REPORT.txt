@@ -5,9 +5,9 @@ Provided result files are named as follows:
 LAST RESULTS:
 
 01.05.2023
-===============================================
+=================================================
  Total 197 images with Localizer 1
------------------------------------------------
+-------------------------------------------------
 Decoder Type Decoded Total Percent Augmentation
 opencv   QR     44    172   25.6%   -
 libdmtx  DM     53    129   41.1%   -
@@ -19,7 +19,7 @@ opencv   QR     21     89   23.6%   crop
 libdmtx  DM     16     45   35.6%   crop
 opencv   QR     46    156   29.5%   rotate_color
 libdmtx  DM     53    138   38.4%   rotate_color
-===============================================
+=================================================
 
 
 =================================================
