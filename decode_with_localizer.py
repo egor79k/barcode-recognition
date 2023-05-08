@@ -153,8 +153,6 @@ for object in data['objects']:
                 x_all_max[0] + x_all_max[2] - x_all_min - 1,
                 y_all_max[1] + y_all_max[3] - y_all_min - 1]
 
-    print(bboxes)
-
     if augmentation is not None:
         img = augmentation(img, all_bbox)
 

@@ -19,8 +19,6 @@ def mix_channels(img, bbox):
 
 
 def crop(img, bbox):
-    print(bbox)
-    print(img.shape)
     x = np.random.randint(0, bbox[0])
     y = np.random.randint(0, bbox[1])
     w = np.random.randint(bbox[0] + bbox[2], img.shape[1])
