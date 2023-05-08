@@ -154,7 +154,10 @@ for object in data['objects']:
                 y_all_max[1] + y_all_max[3] - y_all_min - 1]
 
     if augmentation is not None:
-        img = augmentation(img, all_bbox)
+        img, params = augmentation(img, all_bbox)
+        object['augmentation'] = {'type': augmentation_type, 'params': params}
+    else:
+        object['augmentation'] = {}
 
     object['markup'] = []
     results = localizer.localize(img)
