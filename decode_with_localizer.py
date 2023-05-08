@@ -140,8 +140,23 @@ for object in data['objects']:
     img_path = os.path.join(os.path.dirname(markup_file), object['image'])
     img = cv.imread(img_path)
 
+    bboxes = [m['bbox'] for m in object['markup']]
+
+    x_key = lambda b: b[0]
+    y_key = lambda b: b[1]
+    x_all_min = min(bboxes, key=x_key)[0]
+    y_all_min = min(bboxes, key=y_key)[1]
+    x_all_max = max(bboxes, key=x_key)
+    y_all_max = max(bboxes, key=y_key)
+    all_bbox = [x_all_min,
+                y_all_min,
+                x_all_max[0] + x_all_max[2] - x_all_min - 1,
+                y_all_max[1] + y_all_max[3] - y_all_min - 1]
+
+    print(bboxes)
+
     if augmentation is not None:
-        img = augmentation(img)
+        img = augmentation(img, all_bbox)
 
     object['markup'] = []
     results = localizer.localize(img)
