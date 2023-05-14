@@ -148,10 +148,17 @@ for object in data['objects']:
     y_all_min = min(bboxes, key=y_key)[1]
     x_all_max = max(bboxes, key=x_key)
     y_all_max = max(bboxes, key=y_key)
-    all_bbox = [x_all_min,
-                y_all_min,
-                x_all_max[0] + x_all_max[2] - x_all_min - 1,
-                y_all_max[1] + y_all_max[3] - y_all_min - 1]
+    all_bbox = [x_all_min + 1,
+                y_all_min + 1,
+                x_all_max[0] + x_all_max[2] - x_all_min - 2,
+                y_all_max[1] + y_all_max[3] - y_all_min - 2]
+
+    # if (all_bbox[0] + all_bbox[2]) >= img.shape[1] or (all_bbox[1] + all_bbox[3]) >= img.shape[0]:
+    #     print(all_bbox[0] + all_bbox[2], img.shape[1], all_bbox[1] + all_bbox[3], img.shape[0])
+    #     print(bboxes)
+    #     iimg = cv.resize(img, None, fx=0.2, fy=0.2)
+    #     cv.imshow("img", iimg)
+    #     cv.waitKey(0)
 
     if augmentation is not None:
         img, params = augmentation(img, all_bbox)
