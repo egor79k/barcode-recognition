@@ -20,8 +20,9 @@ python3 decode.py image.png 2 best21042023I.pt
 - Декодер DM: libdmtx, zxing
 - Локализатор: 1, 2
 - Веса модели локализатора (здесь есть best21042023I.pt для локализатора 2)
+- Дополнительно: аугментация: rotate, mix_channels, crop, rotate_color
 ```
-python3 decode_with_localizer.py <markup file> <QR decoder> <DataMatrix decoder> <localizer> <localizer checkpoint>
+python3 decode_with_localizer.py <markup file> <QR decoder> <DataMatrix decoder> <localizer> <localizer checkpoint> [augmentation]
 ```
 Пример:
 ```
