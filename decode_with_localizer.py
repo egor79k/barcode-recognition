@@ -93,6 +93,7 @@ QR_decoder_type = sys.argv[2]
 DataMatrix_decoder_type = sys.argv[3]
 Localizer_type = sys.argv[4]
 localizer_checkpoint = sys.argv[5]
+augmentation_type = ''
 
 augmentation = None
 
@@ -140,19 +141,6 @@ for object in data['objects']:
     img_path = os.path.join(os.path.dirname(markup_file), object['image'])
     img = cv.imread(img_path)
 
-    bboxes = [m['bbox'] for m in object['markup']]
-
-    x_key = lambda b: b[0]
-    y_key = lambda b: b[1]
-    x_all_min = min(bboxes, key=x_key)[0]
-    y_all_min = min(bboxes, key=y_key)[1]
-    x_all_max = max(bboxes, key=x_key)
-    y_all_max = max(bboxes, key=y_key)
-    all_bbox = [x_all_min + 1,
-                y_all_min + 1,
-                x_all_max[0] + x_all_max[2] - x_all_min - 2,
-                y_all_max[1] + y_all_max[3] - y_all_min - 2]
-
     # if (all_bbox[0] + all_bbox[2]) >= img.shape[1] or (all_bbox[1] + all_bbox[3]) >= img.shape[0]:
     #     print(all_bbox[0] + all_bbox[2], img.shape[1], all_bbox[1] + all_bbox[3], img.shape[0])
     #     print(bboxes)
@@ -161,6 +149,20 @@ for object in data['objects']:
     #     cv.waitKey(0)
 
     if augmentation is not None:
+        bboxes = [m['bbox'] for m in object['markup']]
+        all_bbox = [img.shape[1] / 2, img.shape[0] / 2, 0, 0]
+        if (len(bboxes) > 0):
+            x_key = lambda b: b[0]
+            y_key = lambda b: b[1]
+            x_all_min = min(bboxes, key=x_key)[0]
+            y_all_min = min(bboxes, key=y_key)[1]
+            x_all_max = max(bboxes, key=x_key)
+            y_all_max = max(bboxes, key=y_key)
+            all_bbox = [x_all_min + 1,
+                        y_all_min + 1,
+                        x_all_max[0] + x_all_max[2] - x_all_min - 2,
+                        y_all_max[1] + y_all_max[3] - y_all_min - 2]
+
         img, params = augmentation(img, all_bbox)
         object['augmentation'] = {'type': augmentation_type, 'params': params}
     else:
@@ -234,11 +236,11 @@ for object in data['objects']:
         if QR_total > 0:
             QR_percent = round(QR_decoded / QR_total * 100, 1)
 
-        print(f'==================================\n {iter} of {total} images\n----------------------------------' +
-            f'\nDecoder Type Decoded Total Percent\n' + 
-            f'{QR_decoder_type:8} QR {QR_decoded:-6}{QR_total:-7}{QR_percent:-7}%\n' +
-            f'{DataMatrix_decoder_type:8} DM {DataMatrix_decoded:-6}{DataMatrix_total:-7}{DataMatrix_percent:-7}%\n' + 
-            '==================================')
+        print(f'===============================================\n {iter} of {total} images\n-----------------------------------------------' +
+            f'\nDecoder Type Decoded Total Percent Augmentation\n' + 
+            f'{QR_decoder_type:8} QR {QR_decoded:-6}{QR_total:-7}{QR_percent:-7}%  {augmentation_type}\n' +
+            f'{DataMatrix_decoder_type:8} DM {DataMatrix_decoded:-6}{DataMatrix_total:-7}{DataMatrix_percent:-7}%  {augmentation_type}\n' + 
+            '===============================================')
 
 
 result_file_path = os.path.join(os.path.dirname(markup_file), 'result.json')
@@ -256,8 +258,8 @@ QR_percent = 0
 if QR_total > 0:
     QR_percent = round(QR_decoded / QR_total * 100, 1)
 
-print(f'==================================\n Total {total} images\n----------------------------------' +
-    f'\nDecoder Type Decoded Total Percent\n' + 
-    f'{QR_decoder_type:8} QR {QR_decoded:-6}{QR_total:-7}{QR_percent:-7}%\n' +
-    f'{DataMatrix_decoder_type:8} DM {DataMatrix_decoded:-6}{DataMatrix_total:-7}{DataMatrix_percent:-7}%\n' + 
-    '==================================')
+print(f'===============================================\n Total {total} images\n-----------------------------------------------' +
+    f'\nDecoder Type Decoded Total Percent Augmentation\n' + 
+    f'{QR_decoder_type:8} QR {QR_decoded:-6}{QR_total:-7}{QR_percent:-7}%  {augmentation_type}\n' +
+    f'{DataMatrix_decoder_type:8} DM {DataMatrix_decoded:-6}{DataMatrix_total:-7}{DataMatrix_percent:-7}%  {augmentation_type}\n' + 
+    '===============================================')

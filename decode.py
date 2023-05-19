@@ -6,9 +6,9 @@ from qr_dm_decoder.decoder import decode
 
 
 def displayResult(img, results):
-    RED =   (0, 0, 255)
+    RED =   (127, 0, 255)
     GREEN = (0, 255, 0)
-    BLUE =  (255, 0, 0)
+    BLUE =  (255, 255, 0)
 
     scale = 700 / img.shape[0]
     img = cv.resize(img, None, fx=scale, fy=scale)
@@ -21,7 +21,7 @@ def displayResult(img, results):
         cv.polylines(img, [np.array([polygon], np.int32)], True, GREEN, 2)
 
         font = cv.FONT_HERSHEY_SIMPLEX
-        cv.putText(img, code, polygon[3], font, 0.5, BLUE, 2)
+        cv.putText(img, code, polygon[3], font, 0.7, BLUE, 2)
         print('\nDECODED INFO:', code)
 
     if len(sys.argv) == 5:
