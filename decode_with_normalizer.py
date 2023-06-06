@@ -6,37 +6,25 @@ import cv2 as cv
 import pyzbar.pyzbar as pyzbar
 from pylibdmtx import pylibdmtx
 import pyzxing
-import normalizer
-
-
-# def displayResult(img, code, polygon):
-#     RED =   (0, 0, 255)
-#     GREEN = (0, 255, 0)
-#     BLUE =  (255, 0, 0)
-
-#     for pt in polygon:
-#         cv.circle(img, pt, 6, RED, 3)
-
-#     cv.polylines(img, [np.array([polygon], np.int32)], True, GREEN, 2)
-
-#     font = cv.FONT_HERSHEY_SIMPLEX
-#     cv.putText(img, code, (10, 30), font, 1.0, BLUE, 3)
-
-#     cv.imshow("BarCode", img)
-#     cv.waitKey(0);
+from qr_dm_decoder.localizer_1 import Localizer_1
+from qr_dm_decoder.localizer_2 import Localizer_2
+from qr_dm_decoder.normalizer import Normalize
+import augmentation as aug
 
 # QR
 def detectAndDecodeOpenCV(img):
     bardet = cv.QRCodeDetector()
-    decoded_info, corners, _ = bardet.detectAndDecode(img)
 
-    if corners is None:
+    try:
+        decoded_info, corners, _ = bardet.detectAndDecode(img)
+    except:
+        print('OpenCV: Exception in QR decoder')
+        return (False, '')
+
+    if corners is None or len(decoded_info) == 0:
         print('OpenCV: QR-code not finded')
         return (False, '')
 
-    # int_corners = tuple(tuple(map(int, x)) for x in corners[0])
-
-    # displayResult(img.copy(), decoded_info, int_corners)
     return (True, decoded_info)
 
 # QR
@@ -48,9 +36,7 @@ def detectAndDecodeZBar(img):
         return (False, '')
 
     obj = decoded_objects[0]
-    # int_corners = [[p.x, p.y] for p in obj.polygon]
 
-    # displayResult(img.copy(), obj.data.decode('utf-8'), int_corners)
     return (True, obj.data.decode('utf-8'))
 
 # DataMatrix
@@ -62,10 +48,7 @@ def detectAndDecodeLibDMtx(img):
         return (False, '')
 
     obj = decoded_objects[0]
-    # r = obj.rect
-    # int_corners = [[r.left, r.top], [r.left + r.width, r.top], [r.left + r.width, r.top + r.height], [r.left, r.top + r.height]]
 
-    # displayResult(img.copy(), obj.data.decode('utf-8'), int_corners)
     return (True, obj.data.decode('utf-8'))
 
 # QR + DataMatrix
@@ -79,15 +62,18 @@ def detectAndDecodeZXing(img):
         print('PyZXing: Barcode not finded')
         return (False, '')
 
-    # int_corners = tuple((int(x[0]), int(x[1])) for x in obj['points'])
-
-    # displayResult(img.copy(), obj['parsed'].decode('utf-8'), int_corners)
     return (True, obj['parsed'].decode('utf-8'))
 
 
-if len(sys.argv) < 4:
-    print('Usage: <markup file> <QR decoder> <DataMatrix decoder>')
+if len(sys.argv) < 6:
+    print('Usage: <markup file> <QR decoder> <DataMatrix decoder> <localizer> <localizer checkpoint> [augmentation]')
     sys.exit()
+
+Augmentations = {
+    'rotate': aug.rotate,
+    'mix_channels': aug.mix_channels,
+    'crop': aug.crop,
+    'rotate_color': aug.rotate_color}
 
 QR_decoders = {
     'opencv': detectAndDecodeOpenCV,
@@ -98,12 +84,28 @@ DataMatrix_decoders = {
     'libdmtx': detectAndDecodeLibDMtx,
     'zxing': detectAndDecodeZXing}
 
+Localizers = {
+    '1': Localizer_1,
+    '2': Localizer_2}
+
 markup_file = sys.argv[1]
 
 QR_decoder_type = sys.argv[2]
 DataMatrix_decoder_type = sys.argv[3]
+Localizer_type = sys.argv[4]
+localizer_checkpoint = sys.argv[5]
+augmentation_type = ''
 
-# scale_size = int(sys.argv[4])
+augmentation = None
+
+if len(sys.argv) > 6:
+    augmentation_type = sys.argv[6]
+
+    if augmentation_type not in Augmentations:
+        print('Unknown augmentation_type: ', augmentation_type)
+        sys.exit()
+
+    augmentation = Augmentations[augmentation_type]
 
 if QR_decoder_type not in QR_decoders:
     print('Unknown QR_decoder_type: ', QR_decoder_type)
@@ -113,8 +115,13 @@ if DataMatrix_decoder_type not in DataMatrix_decoders:
     print('Unknown DataMatrix_decoder_type: ', DataMatrix_decoder_type)
     sys.exit()
 
+if Localizer_type not in Localizers:
+    print('Unknown Localizer_type: ', Localizer_type)
+    sys.exit()
+
 QR_decoder = QR_decoders[QR_decoder_type]
 DataMatrix_decoder = DataMatrix_decoders[DataMatrix_decoder_type]
+Localizer = Localizers[Localizer_type]
 
 with open(markup_file, 'r') as file:
     data = json.load(file)
@@ -124,35 +131,68 @@ QR_total = 0
 DataMatrix_decoded = 0
 DataMatrix_total = 0
 iter = 0
+padding = 0.15
+scale_size = int(130 * (1 + 2 * padding))
 total = len(data['objects'])
 
+localizer = Localizer(localizer_checkpoint)
+aug.set_seed(0)
+
 for object in data['objects']:
-    # print(object['image'])
     img_path = os.path.join(os.path.dirname(markup_file), object['image'])
     img = cv.imread(img_path)
 
-    for markup in object['markup']:
-        bbox = markup['bbox']
-        type = markup['type']
+    # if (all_bbox[0] + all_bbox[2]) >= img.shape[1] or (all_bbox[1] + all_bbox[3]) >= img.shape[0]:
+    #     print(all_bbox[0] + all_bbox[2], img.shape[1], all_bbox[1] + all_bbox[3], img.shape[0])
+    #     print(bboxes)
+    #     iimg = cv.resize(img, None, fx=0.2, fy=0.2)
+    #     cv.imshow("img", iimg)
+    #     cv.waitKey(0)
 
-        x = bbox[0]
-        y = bbox[1]
-        w = bbox[2]
-        h = bbox[3]
+    if augmentation is not None:
+        bboxes = [m['bbox'] for m in object['markup']]
+        all_bbox = [img.shape[1] / 2, img.shape[0] / 2, 0, 0]
+        if (len(bboxes) > 0):
+            x_key = lambda b: b[0]
+            y_key = lambda b: b[1]
+            x_all_min = min(bboxes, key=x_key)[0]
+            y_all_min = min(bboxes, key=y_key)[1]
+            x_all_max = max(bboxes, key=x_key)
+            y_all_max = max(bboxes, key=y_key)
+            all_bbox = [x_all_min + 1,
+                        y_all_min + 1,
+                        x_all_max[0] + x_all_max[2] - x_all_min - 2,
+                        y_all_max[1] + y_all_max[3] - y_all_min - 2]
 
-        cropped_img = img[y : y + h, x : x + w]
+        img, params = augmentation(img, all_bbox)
+        object['augmentation'] = {'type': augmentation_type, 'params': params}
+    else:
+        object['augmentation'] = {}
+
+    object['markup'] = []
+    results = localizer.localize(img)
+
+    for res in results:
+        x = res[0]
+        y = res[1]
+        w = res[2]
+        h = res[3]
+        type = res[4]
+        
+        markup = {}
+        markup['bbox'] = [x, y, w, h]
+        markup['type'] = type
+
+        orig_pad = int(padding * min(w, h))
+
+        cropped_img = img[y - orig_pad : y + h + orig_pad, x - orig_pad : x + w + orig_pad]
         if cropped_img.shape[0] < 1 or cropped_img.shape[1] < 1:
             continue
-        scale = 180 / min(cropped_img.shape[0], cropped_img.shape[1])
-        cropped_img = cv.resize(cropped_img, None, fx=scale, fy=scale)
-        # cv.imwrite('resu/' + str(iter) + '.jpg', cropped_img)
-        # cv.imshow("Before normalization", cropped_img)
-        # cv.waitKey(0)
-        cv.imwrite('temp.png', cropped_img)
-        normalizer.Normalize('temp.png', 'temp.png')
-        cropped_img = cv.imread('temp.png')
-        # cv.imshow("After normalization", cropped_img)
-        # cv.waitKey(0)
+
+        cropped_img = Normalize(cropped_img, type == 0)
+
+        scale = scale_size / min(cropped_img.shape[0], cropped_img.shape[1])
+        cropped_img = cv.resize(cropped_img, None, fx=scale, fy=scale, interpolation=cv.INTER_CUBIC)
 
         if type == 0:
             success, info = QR_decoder(cropped_img)
@@ -176,6 +216,7 @@ for object in data['objects']:
 
         markup['decoded'] = success
         markup['decoded_info'] = info
+        object['markup'].append(markup)
 
     iter += 1
     # Backup
@@ -197,11 +238,11 @@ for object in data['objects']:
         if QR_total > 0:
             QR_percent = round(QR_decoded / QR_total * 100, 1)
 
-        print(f'==================================\n {iter} of {total} images\n----------------------------------' +
-            f'\nDecoder Type Decoded Total Percent\n' + 
-            f'{QR_decoder_type:8} QR {QR_decoded:-6}{QR_total:-7}{QR_percent:-7}%\n' +
-            f'{DataMatrix_decoder_type:8} DM {DataMatrix_decoded:-6}{DataMatrix_total:-7}{DataMatrix_percent:-7}%\n' + 
-            '==================================')
+        print(f'===============================================\n {iter} of {total} images\n-----------------------------------------------' +
+            f'\nDecoder Type Decoded Total Percent Augmentation\n' + 
+            f'{QR_decoder_type:8} QR {QR_decoded:-6}{QR_total:-7}{QR_percent:-7}%  {augmentation_type}\n' +
+            f'{DataMatrix_decoder_type:8} DM {DataMatrix_decoded:-6}{DataMatrix_total:-7}{DataMatrix_percent:-7}%  {augmentation_type}\n' + 
+            '===============================================')
 
 
 result_file_path = os.path.join(os.path.dirname(markup_file), 'result.json')
@@ -219,8 +260,8 @@ QR_percent = 0
 if QR_total > 0:
     QR_percent = round(QR_decoded / QR_total * 100, 1)
 
-print(f'==================================\n Total {total} images\n----------------------------------' +
-    f'\nDecoder Type Decoded Total Percent\n' + 
-    f'{QR_decoder_type:8} QR {QR_decoded:-6}{QR_total:-7}{QR_percent:-7}%\n' +
-    f'{DataMatrix_decoder_type:8} DM {DataMatrix_decoded:-6}{DataMatrix_total:-7}{DataMatrix_percent:-7}%\n' + 
-    '==================================')
+print(f'===============================================\n Total {total} images\n-----------------------------------------------' +
+    f'\nDecoder Type Decoded Total Percent Augmentation\n' + 
+    f'{QR_decoder_type:8} QR {QR_decoded:-6}{QR_total:-7}{QR_percent:-7}%  {augmentation_type}\n' +
+    f'{DataMatrix_decoder_type:8} DM {DataMatrix_decoded:-6}{DataMatrix_total:-7}{DataMatrix_percent:-7}%  {augmentation_type}\n' + 
+    '===============================================')
